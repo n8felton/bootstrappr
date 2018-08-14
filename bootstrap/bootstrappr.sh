@@ -15,8 +15,8 @@ IFS=$'\n'
 
 echo "*** Welcome to bootstrappr! ***"
 echo "Available volumes:"
-for VOL in $(/bin/ls -1 /Volumes) ; do
-    if [[ "${VOL}" != "OS X Base System" ]] ; then
+for VOL in $(/bin/ls -d1 /Volumes/*) ; do
+    if [[ ! "${VOL}" =~ "OS X Base System" ]] ; then
         let INDEX=${INDEX}+1
         VOLUMES[${INDEX}]=${VOL}
         echo "    ${INDEX}  ${VOL}"
@@ -24,14 +24,14 @@ for VOL in $(/bin/ls -1 /Volumes) ; do
 done
 read -p "Install to volume # (1-${INDEX}): " SELECTEDINDEX
 
-SELECTEDVOLUME=${VOLUMES[${SELECTEDINDEX}]}
+SELECTEDVOLUME="${VOLUMES[${SELECTEDINDEX}]}"
 
 if [[ "${SELECTEDVOLUME}" == "" ]]; then
     exit 0
 fi
 
 echo
-echo "Installing packages to /Volumes/${SELECTEDVOLUME}..."
+echo "Installing packages to ${SELECTEDVOLUME}..."
 
 # dirname and basename not available in Recovery boot
 # so we get to use Bash pattern matching
@@ -48,14 +48,14 @@ for ITEM in "${PACKAGESDIR}"/* ; do
 				if [[ -x ${ITEM} ]]; then
 					echo "running script:  ${FILENAME}"
 					# pass the selected volume to the script as $1
-					${ITEM} "/Volumes/${SELECTEDVOLUME}"
+					${ITEM} "${SELECTEDVOLUME}"
 				else
 					echo "${FILENAME} is not executable"
 				fi
 				;;
 			pkg ) 
 				echo "install package: ${FILENAME}"
-				/usr/sbin/installer -pkg "${ITEM}" -target "/Volumes/${SELECTEDVOLUME}"
+				/usr/sbin/installer -pkg "${ITEM}" -target "${SELECTEDVOLUME}"
 				;;
 			* ) echo "unsupported file extension: ${ITEM}" ;;
 		esac
